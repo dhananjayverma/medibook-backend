@@ -1,0 +1,55 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: appointment_booking
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Verify Code Syntax
+      run: node --check src/server.js src/controllers/*.js src/routes/*.js src/middleware/*.js src/utils/*.js
+
+    - name: Set up Environment Variables
+      run: |
+        echo "DB_HOST=127.0.0.1" >> .env
+        echo "DB_PORT=3306" >> .env
+        echo "DB_USER=root" >> .env
+        echo "DB_PASSWORD=password" >> .env
+        echo "DB_NAME=appointment_booking" >> .env
+        echo "JWT_SECRET=ci_test_secret" >> .env
+        echo "JWT_EXPIRES_IN=1h" >> .env
+        echo "PORT=5000" >> .env
+        echo "NODE_ENV=test" >> .env
+
+    - name: Run Database Migrations
+      run: npm run migrate
+
+    - name: Run Database Seeder
+      run: npm run seed
