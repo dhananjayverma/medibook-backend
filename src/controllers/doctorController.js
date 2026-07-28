@@ -24,8 +24,16 @@ const getDoctors = async (req, res) => {
     let params = [];
 
     if (name) {
-      whereConditions.push('u.full_name LIKE ?');
-      params.push(`%${name}%`);
+      const words = name.trim().split(/\s+/).filter(w => w.toLowerCase() !== 'dr' && w.toLowerCase() !== 'dr.');
+      if (words.length > 0) {
+        words.forEach(word => {
+          whereConditions.push('u.full_name LIKE ?');
+          params.push(`%${word}%`);
+        });
+      } else {
+        whereConditions.push('u.full_name LIKE ?');
+        params.push(`%${name}%`);
+      }
     }
 
     if (specialization) {

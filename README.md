@@ -238,11 +238,11 @@ This repository includes a pipeline script (`.github/workflows/ci-cd.yml`). Here
 
 
 
-👨‍⚕️ Doctor Portal Login:
+<!-- 👨‍⚕️ Doctor Portal Login:
 Email: arjun.sharma1@gmail.com
 Password: password123
 Name: Dr. Arjun Sharma
 🧑‍💼 Patient Portal Login:
 Email: rajesh.mehta1001@gmail.com
 Password: password123
-Name: Rajesh Mehta
+Name: Rajesh Mehta -->
