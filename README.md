@@ -114,8 +114,15 @@ graph TD
    npm run migrate
 
    # Seed database with dummy doctors and slots
+   # This generates 2,000 Indian doctors, 2,000 Indian patients, and 30 days of availability slots!
    npm run seed
 
    # Start backend service
    npm start
    ```
+
+### 🌱 Database Seeding Specification
+The seeder script (`src/database/seed.js`) populates a robust set of authentic test data matching Indian medical operations:
+* **Doctors**: 2,000 profiles with names like `Arjun Sharma`, `Priya Reddy`, mapped to leading hospitals (`Apollo Hospitals`, `KIMS`, `Manipal Hospitals`).
+* **Patients**: 2,000 profiles with unique age parameters, blood groups, and medical histories.
+* **Slots**: Pre-generates 30 days of future time slots (30-minute intervals from 9:00 AM to 6:00 PM) for the first 50 doctors to ensure rich availability lists during client UI testing.

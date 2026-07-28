@@ -13,41 +13,28 @@ const SPECIALIZATIONS = [
 ];
 
 const FIRST_NAMES = [
-  'James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda',
-  'William', 'Barbara', 'David', 'Elizabeth', 'Richard', 'Susan', 'Joseph', 'Jessica',
-  'Thomas', 'Sarah', 'Charles', 'Karen', 'Christopher', 'Lisa', 'Daniel', 'Nancy',
-  'Matthew', 'Betty', 'Anthony', 'Margaret', 'Mark', 'Sandra', 'Donald', 'Ashley',
-  'Steven', 'Dorothy', 'Paul', 'Kimberly', 'Andrew', 'Emily', 'Joshua', 'Donna',
-  'Kenneth', 'Michelle', 'Kevin', 'Carol', 'Brian', 'Amanda', 'George', 'Melissa',
-  'Timothy', 'Deborah', 'Ronald', 'Stephanie', 'Edward', 'Rebecca', 'Jason', 'Sharon',
-  'Jeffrey', 'Laura', 'Ryan', 'Cynthia', 'Jacob', 'Kathleen', 'Gary', 'Amy',
-  'Nicholas', 'Angela', 'Eric', 'Shirley', 'Jonathan', 'Anna', 'Stephen', 'Brenda',
-  'Larry', 'Pamela', 'Justin', 'Emma', 'Scott', 'Nicole', 'Brandon', 'Helen',
-  'Benjamin', 'Samantha', 'Samuel', 'Katherine', 'Raymond', 'Christine', 'Gregory',
-  'Debra', 'Frank', 'Rachel', 'Alexander', 'Carolyn', 'Patrick', 'Janet', 'Jack'
+  'Arjun', 'Aarav', 'Vihaan', 'Aditya', 'Rohan', 'Amit', 'Rahul', 'Sanjay',
+  'Dev', 'Karan', 'Kabir', 'Rudra', 'Nikhil', 'Piyush', 'Ravi', 'Vikram',
+  'Sameer', 'Vijay', 'Alok', 'Deepak', 'Rajesh', 'Anil', 'Sunil', 'Manoj',
+  'Priya', 'Ananya', 'Riya', 'Neha', 'Pooja', 'Shreya', 'Sneha', 'Aaradhya',
+  'Kavya', 'Aditi', 'Divya', 'Isha', 'Meera', 'Ritu', 'Kiran', 'Swati',
+  'Tanvi', 'Anjali', 'Preeti', 'Jyoti', 'Harsh', 'Mohit', 'Yash', 'Gaurav',
+  'Varun', 'Raman', 'Abhishek', 'Aman', 'Saurabh', 'Manish', 'Pranav'
 ];
 
 const LAST_NAMES = [
-  'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis',
-  'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson',
-  'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson',
-  'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker',
-  'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores',
-  'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell',
-  'Carter', 'Roberts', 'Turner', 'Phillips', 'Evans', 'Collins', 'Edwards', 'Stewart',
-  'Morris', 'Morales', 'Murphy', 'Cook', 'Rogers', 'Gutierrez', 'Ortiz', 'Morgan',
-  'Cooper', 'Peterson', 'Bailey', 'Reed', 'Kelly', 'Howard', 'Ramos', 'Kim', 'Cox',
-  'Ward', 'Richardson', 'Watson', 'Brooks', 'Chavez', 'Wood', 'James', 'Bennett',
-  'Gray', 'Mendoza', 'Ruiz', 'Hughes', 'Price', 'Alvarez', 'Castillo', 'Sanders'
+  'Sharma', 'Verma', 'Gupta', 'Mehta', 'Joshi', 'Reddy', 'Patel', 'Singh',
+  'Kumar', 'Yadav', 'Mishra', 'Trivedi', 'Pandey', 'Iyer', 'Nair', 'Pillai',
+  'Sen', 'Roy', 'Das', 'Banerjee', 'Chatterjee', 'Mukherjee', 'Bose', 'Dutta',
+  'Rao', 'Choudhury', 'Jha', 'Verma', 'Sinha', 'Kapoor', 'Malhotra', 'Khanna',
+  'Saxena', 'Deshmukh', 'Kulkarni', 'Bhat', 'Hegde', 'Shenoy', 'Prabhu'
 ];
 
 const HOSPITALS = [
-  'City General Hospital', 'St. Mary Medical Center', 'Sunrise Health Clinic',
-  'Metropolitan Hospital', 'Valley Medical Group', 'Community Health Center',
-  'Regional Medical Center', 'University Hospital', 'Premier Health Institute',
-  'Central Medical Hospital', 'Northside Clinic', 'Eastside Medical',
-  'Westview Hospital', 'Southgate Health', 'Lakeside Medical Center',
-  'Hillcrest Hospital', 'Riverside Clinic', 'Oakwood Medical', 'Pinecrest Health'
+  'Apollo Hospitals', 'KIMS Hospital', 'Manipal Hospitals', 'Max Super Speciality',
+  'Fortis Healthcare', 'Medanta The Medicity', 'Wockhardt Hospitals', 'Kokilaben Hospital',
+  'Lilavati Hospital', 'Sir Ganga Ram Hospital', 'Narayana Health', 'Columbia Asia',
+  'Aster DM Healthcare', 'CARE Hospitals', 'Asian Heart Institute', 'Global Hospitals'
 ];
 
 const QUALIFICATIONS = [
@@ -107,12 +94,12 @@ async function seed() {
     await connection.query('TRUNCATE TABLE users');
     await connection.query('SET FOREIGN_KEY_CHECKS = 1');
 
-    console.log('📥 Inserting 1,000 doctors...');
+    console.log('📥 Inserting 2,000 doctors...');
 
     const BATCH_SIZE = 100;
 
     // Insert doctors
-    for (let batch = 0; batch < 10; batch++) {
+    for (let batch = 0; batch < 20; batch++) {
       const userValues = [];
       const doctorValues = [];
 
@@ -163,14 +150,14 @@ async function seed() {
         [doctorValueArray]
       );
 
-      process.stdout.write(`  Inserted ${Math.min((batch + 1) * BATCH_SIZE, 1000)} / 1000 doctors\r`);
+      process.stdout.write(`  Inserted ${Math.min((batch + 1) * BATCH_SIZE, 2000)} / 2000 doctors\r`);
     }
-    console.log('\n✅ 1,000 doctors inserted!');
+    console.log('\n✅ 2,000 doctors inserted!');
 
-    console.log('📥 Inserting 1,000 patients...');
+    console.log('📥 Inserting 2,000 patients...');
 
     // Insert patients
-    for (let batch = 0; batch < 10; batch++) {
+    for (let batch = 0; batch < 20; batch++) {
       const userValues = [];
       const patientValues = [];
 
@@ -212,9 +199,9 @@ async function seed() {
         [patientValueArray]
       );
 
-      process.stdout.write(`  Inserted ${Math.min((batch + 1) * BATCH_SIZE, 1000)} / 1000 patients\r`);
+      process.stdout.write(`  Inserted ${Math.min((batch + 1) * BATCH_SIZE, 2000)} / 2000 patients\r`);
     }
-    console.log('\n✅ 1,000 patients inserted!');
+    console.log('\n✅ 2,000 patients inserted!');
 
     console.log('📅 Seeding availability slots for doctors...');
 
@@ -268,8 +255,8 @@ async function seed() {
 
     console.log('\n🎉 Seeding complete!');
     console.log('\n📋 Login credentials:');
-    console.log('  Doctor email:   dr.james.smith1@gmail.com | password: password123');
-    console.log('  Patient email:  mary.johnson1001@gmail.com | password: password123');
+    console.log('  Doctor email:   arjun.sharma1@gmail.com | password: password123');
+    console.log('  Patient email:  priya.verma1001@gmail.com | password: password123');
     console.log('\nNote: Check the database for exact emails. All passwords are: password123');
 
     // Print first doctor and patient emails
