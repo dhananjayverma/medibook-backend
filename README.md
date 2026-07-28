@@ -1,6 +1,6 @@
-# 🏥 MediBook — Backend API
+# 🏥 Booking Kro — Backend API (Express & MySQL)
 
-MediBook is a production-grade, highly scalable REST API built using **Node.js**, **Express**, and **MySQL**. It powers a real-time doctor-patient appointment booking engine, implementing robust authentication, transactional safety, and comprehensive database structures.
+Booking Kro is a production-grade, highly scalable REST API built using **Node.js**, **Express**, and **MySQL**. It powers a real-time doctor-patient appointment booking engine, implementing robust authentication, transactional safety, and comprehensive database structures.
 
 ---
 
@@ -14,11 +14,11 @@ backend/
 │   │   └── swagger.js      # OpenAPI Spec (Swagger) setup for endpoint testing
 │   ├── controllers/
 │   │   ├── authController.js   # JWT generation, hash validation, and login routines
-│   │   ├── doctorController.js # Slot CRUD, doctor-specific schedules, status workflows
+│   │   ├── doctorController.js # Slot CRUD, keyword-split matching search algorithms
 │   │   └── patientController.js# Concurrency-safe appointment bookings, cancellations
 │   ├── database/
 │   │   ├── migrate.js      # Schema creation script (relational DDL queries)
-│   │   └── seed.js         # Faker/JS script to populate 2,000 entities & slots
+│   │   └── seed.js         # Faker/JS script to populate database entities
 │   ├── middleware/
 │   │   ├── auth.js         # JWT interceptor and Role-Based Access Control (RBAC)
 │   │   └── validate.js     # Payload parser validating incoming parameters
@@ -31,15 +31,12 @@ backend/
 │   │   └── response.js     # Unified format responder wrapper
 │   └── server.js           # Server initializer, global middleware stacks
 ├── .env
-├── package.json
-└── .github/
-    └── workflows/
-        └── ci-cd.yml       # GitHub Actions workflow script
+└── package.json
 ```
 
 ---
 
-## ⚙️ Core Architecture & Architecture Workflows
+## ⚙️ Core Architecture & Database Workflows
 
 ### 1. Concurrency-Safe Booking Engine
 To prevent double-booking issues when multiple patients attempt to book the exact same slot at the same microsecond, the booking engine utilizes **MySQL Transaction isolation levels** combined with **Row-Level locks** (`FOR UPDATE`).
@@ -60,189 +57,65 @@ sequenceDiagram
     Database-->>PatientB: Slot already booked! (Rollback Transaction)
 ```
 
-### 2. Authentication & Authorization Workflow
-We use **JWT (JSON Web Tokens)** for stateless session management. Users can sign in as either a doctor or a patient. Role-Based Access Control (RBAC) checks the requested path against the user's role.
+### 2. Keyword-Based Multi-Word Search matching
+The search API splits user query inputs (e.g. `Arjun Sharma`), filters out generic pre-fixes like `Dr.` / `Dr.`, and converts search keywords into strict SQL `LIKE` criteria matching all terms.
 
 ```mermaid
 graph TD
-    Client[Mobile App Client] -->|1. POST Login Credentials| AuthRoute[Auth Route]
-    AuthRoute -->|2. Verify Hash| DB[(MySQL DB)]
-    DB -->|3. Return Role/Details| AuthRoute
-    AuthRoute -->|4. Generate JWT with Payload| JWT[JWT Signer]
-    JWT -->|5. Return token to Client| Client
-    Client -->|6. Call Guarded Route + Bearer Token| Middleware[Auth Middleware]
-    Middleware -->|7. Verify Token & Validate Role| RouteHandler[Route Controller Handler]
+    Query[Search: Dr. Arjun Sharma] --> Clean[Clean Name Keywords: 'Arjun', 'Sharma']
+    Clean --> BuildQuery[Build: u.full_name LIKE '%Arjun%' AND u.full_name LIKE '%Sharma%']
+    BuildQuery --> DB[(MySQL Database)]
+    DB --> Output[Returns 'Dr. Arjun Sharma' only]
 ```
 
 ---
 
-## 🔌 Complete REST API Endpoint Specification
+## 🛠️ Tech Stack & Middleware
 
-All listing endpoints support query parameters for pagination:
-* `page` (Default: `1`)
-* `limit` (Default: `15`, Maximum: `100`)
+* **Core**: Node.js & Express.js
+* **Database**: MySQL (Using `mysql2/promise` pooling)
+* **Auth**: JSON Web Tokens (JWT) & bcryptjs hashing
+* **Validation**: `express-validator` middleware
+* **Documentation**: Swagger UI & OpenAPI
+
+---
+
+## 🔌 API Namespace Endpoints
 
 ### 🔐 Authentication namespace (`/api/auth`)
+* `POST /api/auth/login` - Authenticates user credentials and returns JWT token.
 
-#### `POST /api/auth/login`
-Authenticates a user and returns a token with user/profile information.
-* **Payload:**
-  ```json
-  {
-    "email": "demo.patient@medical.com",
-    "password": "password123"
-  }
-  ```
-* **Success Response (200 OK):**
-  ```json
-  {
-    "status": "success",
-    "data": {
-      "token": "eyJhbGciOi...",
-      "user": {
-        "id": 1,
-        "email": "demo.patient@medical.com",
-        "role": "patient",
-        "full_name": "John Doe"
-      },
-      "profile": {
-        "id": 1,
-        "gender": "Male",
-        "blood_group": "O+"
-      }
-    }
-  }
-  ```
-
-#### `GET /api/auth/me`
-*Headers: `Authorization: Bearer <token>`*
-Returns current user context.
+### 👨‍⚕️ Doctor namespace (`/api/doctors`)
+* `GET /api/doctors` - Fetches doctor lists with pagination (supports `name`, `specialization`, `date` filters).
+* `GET /api/doctors/specializations` - Retrieves all unique medical department specializations.
+* `GET /api/doctors/:id/slots` - Fetches available booking slots for a selected doctor.
 
 ---
 
-### 🩺 Public Doctor Directory (`/api/doctors`)
+## 🚀 Execution & Setup
 
-#### `GET /api/doctors`
-Searches doctor database profiles using optional filters.
-* **Query Parameters:** `name`, `specialization`, `date`, `page`, `limit`
-* **Success Response (200 OK):**
-  ```json
-  {
-    "status": "success",
-    "data": [
-      {
-        "id": 1,
-        "full_name": "Dr. Sarah Connor",
-        "specialization": "Cardiology",
-        "hospital_name": "City General Hospital",
-        "consultation_fee": 150.00,
-        "rating": 4.8
-      }
-    ],
-    "pagination": {
-      "total": 120,
-      "page": 1,
-      "limit": 1,
-      "totalPages": 120,
-      "hasNext": true
-    }
-  }
-  ```
+1. **Configure Environment Variables**:
+   Create a `.env` file in the backend root directory:
+   ```env
+   PORT=5001
+   DB_HOST=127.0.0.1
+   DB_USER=root
+   DB_PASSWORD=your_password
+   DB_NAME=medibook
+   JWT_SECRET=super_secret_jwt_token_key
+   ```
 
-#### `GET /api/doctors/:id`
-Retrieves full information for a single doctor.
+2. **Run Server**:
+   ```bash
+   # Install dependencies
+   npm install
 
-#### `GET /api/doctors/:id/slots`
-Retrieves available, unbooked slots for a doctor.
+   # Setup database schemas and tables
+   npm run migrate
 
----
+   # Seed database with dummy doctors and slots
+   npm run seed
 
-### 👨‍⚕️ Doctor Portal Namespace (`/api/doctors/me`)
-*Headers: `Authorization: Bearer <doctor_token>`*
-
-#### `GET /api/doctors/me/appointments`
-Returns list of patients booked with the authenticated doctor. Supports filtering by `status` (`pending`, `confirmed`, `completed`, `cancelled`).
-
-#### `POST /api/doctors/me/slots`
-Registers availability. Accepts a single slot object or a bulk array of slots.
-* **Payload (Bulk):**
-  ```json
-  {
-    "slots": [
-      { "slot_date": "2024-12-25", "start_time": "09:00", "end_time": "09:30" },
-      { "slot_date": "2024-12-25", "start_time": "09:30", "end_time": "10:00" }
-    ]
-  }
-  ```
-
-#### `PUT /api/doctors/me/appointments/:id/status`
-Updates appointment status.
-* **Payload:**
-  ```json
-  {
-    "status": "confirmed" // confirmed, completed, cancelled
-  }
-  ```
-
----
-
-### 🧑‍💼 Patient Portal Namespace (`/api/patients`)
-*Headers: `Authorization: Bearer <patient_token>`*
-
-#### `POST /api/patients/appointments`
-Books an appointment.
-* **Payload:**
-  ```json
-  {
-    "slot_id": 482,
-    "notes": "Experiencing recurring headaches"
-  }
-  ```
-
-#### `PUT /api/patients/appointments/:id/cancel`
-Cancels an appointment.
-
----
-
-## 🛠️ Installation & Execution
-
-### Setup Environment
-Configure `/backend/.env` file with the parameters described in standard config section.
-
-### Launch Application
-```bash
-# Install dependencies
-npm install
-
-# Run database setup
-npm run migrate
-npm run seed
-
-# Run server in hot-reload development mode
-npm run dev
-```
-
----
-
-## 📦 CI/CD Pipeline Workflow (GitHub Actions)
-
-This repository includes a pipeline script (`.github/workflows/ci-cd.yml`). Here is the step-by-step CI flow:
-
-1. **Spin up MySQL Service Container**: Launches an ephemeral Docker service container hosting MySQL 8.0 with preconfigured credentials matching testing env.
-2. **Setup Node Runner**: Configures virtual environment runners on Ubuntu with Node.js v18.
-3. **Syntax Validation Check**: Runs syntax parsing (`node --check`) to verify there are no compilation errors in JS scripts.
-4. **Environment Initialization**: Appends testing configurations to `.env`.
-5. **Database DDL Testing**: Executes database migration scripts against the MySQL Docker service.
-6. **Data Injection Verification**: Runs the seeder module to ensure mock data generation scripts execute correctly.
-
-
-
-
-<!-- 👨‍⚕️ Doctor Portal Login:
-Email: arjun.sharma1@gmail.com
-Password: password123
-Name: Dr. Arjun Sharma
-🧑‍💼 Patient Portal Login:
-Email: rajesh.mehta1001@gmail.com
-Password: password123
-Name: Rajesh Mehta -->
+   # Start backend service
+   npm start
+   ```
