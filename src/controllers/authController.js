@@ -6,7 +6,7 @@ const { successResponse, errorResponse } = require('../utils/response');
 
 // Validation rules
 const loginValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+  body('email').isEmail().withMessage('Valid email required'),
   body('password').notEmpty().withMessage('Password required'),
 ];
 

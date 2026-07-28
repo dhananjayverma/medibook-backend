@@ -234,3 +234,15 @@ This repository includes a pipeline script (`.github/workflows/ci-cd.yml`). Here
 4. **Environment Initialization**: Appends testing configurations to `.env`.
 5. **Database DDL Testing**: Executes database migration scripts against the MySQL Docker service.
 6. **Data Injection Verification**: Runs the seeder module to ensure mock data generation scripts execute correctly.
+
+
+
+
+👨‍⚕️ Doctor Portal Login:
+Email: arjun.sharma1@gmail.com
+Password: password123
+Name: Dr. Arjun Sharma
+🧑‍💼 Patient Portal Login:
+Email: rajesh.mehta1001@gmail.com
+Password: password123
+Name: Rajesh Mehta

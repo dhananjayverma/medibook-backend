@@ -13,6 +13,7 @@ const {
   getDoctorAppointments,
   updateAppointmentStatus,
   addSlotValidation,
+  updateDoctorProfile,
 } = require('../controllers/doctorController');
 
 // ─── Public routes ────────────────────────────────────────────────────────────
@@ -49,6 +50,7 @@ router.get('/:id/slots', getDoctorSlots);
 router.use(authenticate, authorize('doctor'));
 
 router.get('/me/appointments', getDoctorAppointments);
+router.put('/me/profile', updateDoctorProfile);
 router.post('/me/slots', addSlotValidation, validate, addSlot);
 router.put('/me/slots/:slotId', updateSlot);
 router.delete('/me/slots/:slotId', deleteSlot);

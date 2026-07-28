@@ -17,7 +17,10 @@ const getDoctors = async (req, res) => {
     const { page, limit, offset } = getPagination(req.query);
     const { name, specialization, date } = req.query;
 
-    let whereConditions = ['d.is_available = 1'];
+    // List doctors if they are marked available OR if they have active unbooked slots created in the future
+    let whereConditions = [
+      '(d.is_available = 1 OR EXISTS (SELECT 1 FROM availability_slots s WHERE s.doctor_id = d.id AND s.is_booked = 0 AND s.is_active = 1 AND (s.slot_date > CURDATE() OR (s.slot_date = CURDATE() AND s.start_time > CURTIME()))))'
+    ];
     let params = [];
 
     if (name) {
@@ -120,7 +123,23 @@ const getDoctorById = async (req, res) => {
       return errorResponse(res, 'Doctor not found', 404);
     }
 
-    return successResponse(res, rows[0], 'Doctor fetched successfully');
+    const doctorData = rows[0];
+
+    // Fetch matching reviews for this doctor
+    const [reviews] = await pool.query(
+      `SELECT r.id, r.rating, r.review_text, r.created_at,
+              u.full_name as patient_name
+       FROM reviews r
+       JOIN patients p ON p.id = r.patient_id
+       JOIN users u ON u.id = p.user_id
+       WHERE r.doctor_id = ?
+       ORDER BY r.created_at DESC`,
+      [id]
+    );
+
+    doctorData.reviews = reviews;
+
+    return successResponse(res, doctorData, 'Doctor fetched successfully');
   } catch (error) {
     console.error('Get doctor by id error:', error);
     return errorResponse(res, 'Failed to fetch doctor', 500);
@@ -147,7 +166,8 @@ const getDoctorSlots = async (req, res) => {
       'doctor_id = ?',
       'is_active = 1',
       'is_booked = 0',
-      'slot_date >= CURDATE()',
+      // Check if slot_date is in the future, OR if it's today, check if start_time is in the future
+      '(slot_date > CURDATE() OR (slot_date = CURDATE() AND start_time > CURTIME()))',
     ];
     let params = [id];
 
@@ -412,10 +432,41 @@ const updateAppointmentStatus = async (req, res) => {
       );
     }
 
+    // Broadcast status change realtime event
+    const { broadcastEvent } = require('../utils/realtime');
+    broadcastEvent('APPOINTMENT_STATUS_UPDATED', { appointment_id: id, status, slot_id: rows[0].slot_id });
+
     return successResponse(res, null, 'Appointment status updated');
   } catch (error) {
     console.error('Update appointment status error:', error);
     return errorResponse(res, 'Failed to update appointment', 500);
+  }
+};
+
+/**
+ * PUT /api/doctors/me/profile
+ * Doctor: Update availability profile status
+ */
+const updateDoctorProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { is_available } = req.body;
+
+    if (typeof is_available !== 'boolean') {
+      return errorResponse(res, 'is_available parameter must be a boolean', 400);
+    }
+
+    const [doctorRows] = await pool.query('SELECT id FROM doctors WHERE user_id = ?', [userId]);
+    if (doctorRows.length === 0) {
+      return errorResponse(res, 'Doctor profile not found', 404);
+    }
+
+    await pool.query('UPDATE doctors SET is_available = ? WHERE user_id = ?', [is_available ? 1 : 0, userId]);
+
+    return successResponse(res, null, 'Doctor profile updated successfully');
+  } catch (error) {
+    console.error('Update doctor profile error:', error);
+    return errorResponse(res, 'Failed to update profile details', 500);
   }
 };
 
@@ -437,4 +488,5 @@ module.exports = {
   getDoctorAppointments,
   updateAppointmentStatus,
   addSlotValidation,
+  updateDoctorProfile,
 };

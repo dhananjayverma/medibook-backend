@@ -55,13 +55,16 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
+const { initRealtime } = require('./utils/realtime');
+
 async function startServer() {
   await testConnection();
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`\n🚀 Server running on http://localhost:${PORT}`);
     console.log(`📚 API Docs: http://localhost:${PORT}/api/docs`);
     console.log(`🏥 Appointment Booking API ready!\n`);
   });
+  initRealtime(server);
 }
 
 startServer();

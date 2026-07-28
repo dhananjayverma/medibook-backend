@@ -86,6 +86,10 @@ const bookAppointment = async (req, res) => {
 
     await conn.commit();
 
+    // Broadcast realtime event
+    const { broadcastEvent } = require('../utils/realtime');
+    broadcastEvent('SLOT_BOOKED', { slot_id, doctor_id: slot.doctor_id });
+
     // Return the created appointment
     const [appointment] = await pool.query(
       `SELECT
@@ -274,6 +278,80 @@ const cancelAppointment = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/patients/appointments/:id/review
+ * Patient: Add rating and review for completed appointment
+ */
+const createReview = async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { rating, review_text } = req.body;
+
+    // Get patient record
+    const [patientRows] = await conn.query('SELECT id FROM patients WHERE user_id = ?', [userId]);
+    if (patientRows.length === 0) {
+      return errorResponse(res, 'Patient profile not found', 404);
+    }
+    const patientId = patientRows[0].id;
+
+    // Get appointment record and verify
+    const [apptRows] = await conn.query(
+      'SELECT id, doctor_id, status FROM appointments WHERE id = ? AND patient_id = ?',
+      [id, patientId]
+    );
+
+    if (apptRows.length === 0) {
+      return errorResponse(res, 'Appointment not found', 404);
+    }
+
+    const appt = apptRows[0];
+    if (appt.status !== 'completed') {
+      return errorResponse(res, 'You can only review completed appointments', 400);
+    }
+
+    await conn.beginTransaction();
+
+    // Insert review
+    await conn.query(
+      `INSERT INTO reviews (appointment_id, doctor_id, patient_id, rating, review_text)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE rating = VALUES(rating), review_text = VALUES(review_text)`,
+      [id, appt.doctor_id, patientId, rating, review_text || null]
+    );
+
+    // Calculate new average rating and total review counts for the doctor
+    const [ratingSummary] = await conn.query(
+      `SELECT AVG(rating) as avg_rating, COUNT(*) as review_count
+       FROM reviews WHERE doctor_id = ?`,
+      [appt.doctor_id]
+    );
+
+    const avgRating = parseFloat(ratingSummary[0].avg_rating || 0).toFixed(2);
+    const reviewCount = ratingSummary[0].review_count || 0;
+
+    // Update doctor record
+    await conn.query(
+      `UPDATE doctors SET rating = ?, total_reviews = ? WHERE id = ?`,
+      [avgRating, reviewCount, appt.doctor_id]
+    );
+
+    await conn.commit();
+
+    return successResponse(res, { rating: avgRating, total_reviews: reviewCount }, 'Review submitted successfully');
+  } catch (error) {
+    await conn.rollback();
+    console.error('Create review error:', error);
+    if (error.code === 'ER_DUP_ENTRY') {
+      return errorResponse(res, 'You have already reviewed this appointment', 409);
+    }
+    return errorResponse(res, 'Failed to submit review', 500);
+  } finally {
+    conn.release();
+  }
+};
+
 // Validation rules
 const bookAppointmentValidation = [
   body('slot_id').isInt({ min: 1 }).withMessage('Valid slot ID required'),
@@ -285,5 +363,6 @@ module.exports = {
   getPatientAppointments,
   getAppointmentById,
   cancelAppointment,
+  createReview,
   bookAppointmentValidation,
 };
