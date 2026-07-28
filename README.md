@@ -126,3 +126,30 @@ The seeder script (`src/database/seed.js`) populates a robust set of authentic t
 * **Doctors**: 2,000 profiles with names like `Arjun Sharma`, `Priya Reddy`, mapped to leading hospitals (`Apollo Hospitals`, `KIMS`, `Manipal Hospitals`).
 * **Patients**: 2,000 profiles with unique age parameters, blood groups, and medical histories.
 * **Slots**: Pre-generates 30 days of future time slots (30-minute intervals from 9:00 AM to 6:00 PM) for the first 50 doctors to ensure rich availability lists during client UI testing.
+
+---
+
+## 📖 Swagger Interactive API Documentation Testing
+Interactively test and verify the REST API endpoints inside your browser:
+
+### 1. Access Swagger UI Page
+1. Ensure the Node backend server is running (`npm start`).
+2. Open your browser and navigate to: **`http://localhost:5001/api/docs`**
+
+### 2. Authentication Walkthrough (Swagger Console)
+1. Locate and expand the **`POST /api/auth/login`** row.
+2. Click **"Try it out"**.
+3. Input the test body:
+   ```json
+   {
+     "email": "arjun.sharma1@gmail.com",
+     "password": "password123"
+   }
+   ```
+4. Click **"Execute"**. 
+5. Under the response body, copy the generated JWT `token` string value.
+6. Scroll to the top of the Swagger page and click the **`Authorize` 🔒** button.
+7. Inside the popup field, input: **`Bearer <YOUR_COPIED_TOKEN_STRING>`** (Ensure a space between "Bearer" and the token).
+8. Click **"Authorize"** then close the popup.
+
+Now you can run slots management CRUDs, patients booking actions, or search algorithms directly from the Swagger UI page! Custom CORS allows calls from localhost ports without browser console conflicts.

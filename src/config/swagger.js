@@ -9,7 +9,7 @@ const options = {
       description: 'REST API for an appointment booking system with Doctor and Patient modules',
     },
     servers: [
-      { url: 'http://localhost:5000', description: 'Development server' },
+      { url: 'http://localhost:5001', description: 'Development server' },
     ],
     components: {
       securitySchemes: {
