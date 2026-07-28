@@ -153,3 +153,54 @@ Interactively test and verify the REST API endpoints inside your browser:
 8. Click **"Authorize"** then close the popup.
 
 Now you can run slots management CRUDs, patients booking actions, or search algorithms directly from the Swagger UI page! Custom CORS allows calls from localhost ports without browser console conflicts.
+
+---
+
+## 🚀 Live Deployment
+
+The backend is fully deployed and live on **Render** with **Aiven Cloud MySQL** as the production database.
+
+| Resource | URL |
+| :--- | :--- |
+| **Live API Base URL** | `https://appointment-booking-backend-c52a.onrender.com/api` |
+| **Swagger API Docs** | `https://appointment-booking-backend-c52a.onrender.com/api/docs` |
+| **Health Check** | `https://appointment-booking-backend-c52a.onrender.com/health` |
+
+> **Note:** The server may take 30–60 seconds to wake up on the first request (Render free tier spins down after inactivity).
+
+---
+
+## 🔐 Test Credentials (Live Database)
+
+The database is pre-seeded with **2,000 doctors** and **2,000 patients**. Use the following credentials to test the app immediately:
+
+### 🧑‍🤝‍🧑 Patient Account
+| Field | Value |
+| :--- | :--- |
+| **Email** | `abhishek.bhat1001@gmail.com` |
+| **Password** | `password123` |
+
+### 👨‍⚕️ Doctor Account
+| Field | Value |
+| :--- | :--- |
+| **Email** | `divya.nair1@gmail.com` |
+| **Password** | `password123` |
+
+---
+
+## ⚡ Quick Test via Swagger (No Setup Required)
+
+You can test the live API **directly in your browser** without running anything locally:
+
+1. Open → **[Swagger UI](https://appointment-booking-backend-c52a.onrender.com/api/docs)**
+2. Click on `POST /api/auth/login` → **"Try it out"**
+3. Paste this body and click **Execute**:
+   ```json
+   {
+     "email": "abhishek.bhat1001@gmail.com",
+     "password": "password123"
+   }
+   ```
+4. Copy the `token` from the response.
+5. Click the **`Authorize 🔒`** button at the top, enter `Bearer <your_token>`, and click **Authorize**.
+6. Now test any protected endpoint (book appointments, search doctors, manage slots, etc.)
