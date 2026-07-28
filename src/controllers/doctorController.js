@@ -133,19 +133,22 @@ const getDoctorById = async (req, res) => {
 
     const doctorData = rows[0];
 
-    // Fetch matching reviews for this doctor
-    const [reviews] = await pool.query(
-      `SELECT r.id, r.rating, r.review_text, r.created_at,
-              u.full_name as patient_name
-       FROM reviews r
-       JOIN patients p ON p.id = r.patient_id
-       JOIN users u ON u.id = p.user_id
-       WHERE r.doctor_id = ?
-       ORDER BY r.created_at DESC`,
-      [id]
-    );
-
-    doctorData.reviews = reviews;
+    // Fetch matching reviews for this doctor safely
+    try {
+      const [reviews] = await pool.query(
+        `SELECT r.id, r.rating, r.review_text, r.created_at,
+                u.full_name as patient_name
+         FROM reviews r
+         JOIN patients p ON p.id = r.patient_id
+         JOIN users u ON u.id = p.user_id
+         WHERE r.doctor_id = ?
+         ORDER BY r.created_at DESC`,
+        [id]
+      );
+      doctorData.reviews = reviews;
+    } catch (err) {
+      doctorData.reviews = [];
+    }
 
     return successResponse(res, doctorData, 'Doctor fetched successfully');
   } catch (error) {
